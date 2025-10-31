@@ -378,13 +378,10 @@ function resetForm(){
 function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.textContent=msg;clearTimeout(s._t);s._t=setTimeout(()=>s.textContent='',1600);}
 </script>
 
-<!-- QR overlay: add ?s=<slug>&source=qr, tag device, 24h cooldown, inject qrUid (no UI changes) -->
+<!-- QR overlay: add ?s=<slug>&source=qr; tag as QR Poster (no UI changes) -->
 <script>
 (function(){
   function qp(k){ try{ return (new URL(location.href).searchParams.get(k)||'').trim(); }catch(_){ return '' } }
-  function gen(){ return 'qr_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
-
-  // Map slugs to your store IDs
   var STORE_BY_SLUG = {
     "witbank-highveld":"CL-Witbank-Highveld",
     "witbank-conradie":"CL-Witbank-Conradie",
@@ -398,68 +395,79 @@ function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.
     "athlone":"CL-Athlone",
     "bronkhorstspruit":"CL-Bronkhorstspruit"
   };
-
   var slug = (qp('s')||'').toLowerCase();
   var src  = (qp('source')||'').toLowerCase();
   if (slug && STORE_BY_SLUG[slug]) { CFG.storeId = STORE_BY_SLUG[slug]; }
   if (src === 'qr') {
     CFG.deviceLabel = 'QR Poster';
     CFG.deviceId = 'QR-' + (slug || (qp('store')||'unknown'));
-    try{ if(!localStorage.getItem('cl_qr_uid')) localStorage.setItem('cl_qr_uid', gen()); }catch(_){}
+    try{ if(!localStorage.getItem('cl_qr_uid')) localStorage.setItem('cl_qr_uid', 'qr_' + Math.random().toString(36).slice(2) + Date.now().toString(36)); }catch(_){}
   }
+})();
+</script>
 
-  // 24h cooldown per QR browser
-  window.CL_QR_canSubmit = function(){
-    try{
-      if (CFG.deviceLabel !== 'QR Poster') return true;
-      var uid = localStorage.getItem('cl_qr_uid')||'';
-      if (!uid) return true;
-      var key = 'cl_qr_last_' + uid;
-      var last = parseInt(localStorage.getItem(key)||'0',10);
-      if (last && (Date.now()-last) < 24*60*60*1000) return false;
-      return true;
-    }catch(_){ return true; }
-  };
-  window.CL_QR_markSubmitted = function(){
-    try{
-      if (CFG.deviceLabel !== 'QR Poster') return;
-      var uid = localStorage.getItem('cl_qr_uid')||'';
-      if (!uid) return;
-      localStorage.setItem('cl_qr_last_' + uid, String(Date.now()));
-    }catch(_){}
-  };
-
-  // Wrap your fireAndForgetSend to inject qrUid and enforce QR cooldown (no other changes)
-  (function(){
-    var orig = window.fireAndForgetSend;
-    if (!orig) return; // if not present, do nothing
-    window.fireAndForgetSend = function(bodyStr){
-      try{
-        var isQR = (CFG && CFG.deviceLabel === 'QR Poster');
-        if (isQR){
-          if (!window.CL_QR_canSubmit()){
-            alert('You have already submitted a review in the last 24 hours.');
-            return;
-          }
-          var obj = JSON.parse(bodyStr);
-          obj.qrUid = localStorage.getItem('cl_qr_uid') || '';
-          bodyStr = JSON.stringify(obj);
-        }
-      }catch(_){}
-      var r = orig.call(this, bodyStr);
-      try{ if (CFG.deviceLabel === 'QR Poster') window.CL_QR_markSubmitted(); }catch(_){}
-      return r;
-    };
-  })();
-
-  // If your Thank You shows differently, also mark via DOM change as a backup
-  (function(){
-    var mo = new MutationObserver(function(){
-      var ty = Array.from(document.querySelectorAll('*')).find(x => /thank you|dankie/i.test((x.textContent||'').toLowerCase()));
-      if (ty) { try{ window.CL_QR_markSubmitted(); }catch(_){} }
+<!-- SAFETY PATCH: ensures QUESTIONS/CHOICES exist and renders if qList is empty -->
+<script>
+(function(){
+  function ensureQuestions(){
+    if (!Array.isArray(window.QUESTIONS) || !window.QUESTIONS.length){
+      window.QUESTIONS = [
+        {id:'Q1',text:'Speed of service'},
+        {id:'Q2',text:'Friendliness of staff'},
+        {id:'Q3',text:'Order accuracy'},
+        {id:'Q4',text:'Cleanliness of store'},
+        {id:'Q5',text:'Overall experience'}
+      ];
+    }
+    if (!Array.isArray(window.CHOICES) || !window.CHOICES.length){
+      window.CHOICES = [
+        {txt:'Excellent',score:5,emo:'😄'},
+        {txt:'Good',     score:4,emo:'🙂'},
+        {txt:'Average',  score:3,emo:'😐'},
+        {txt:'Poor',     score:2,emo:'🙁'},
+        {txt:'Bad',      score:1,emo:'😡'}
+      ];
+    }
+  }
+  function fallbackBuild(){
+    var list = document.getElementById('qList'); if (!list) return;
+    list.innerHTML = '';
+    window.QUESTIONS.forEach(function(q){
+      var card = document.createElement('div'); card.className='card';
+      var title=document.createElement('div'); title.className='q-title'; title.textContent=q.text;
+      var row=document.createElement('div'); row.className='q-row'; row.dataset.qid=q.id;
+      window.CHOICES.forEach(function(c){
+        var d=document.createElement('div'); d.className='opt'; d.dataset.score=c.score;
+        d.innerHTML = '<div class="emo">'+c.emo+'</div><div class="lbl">'+c.txt+'</div>';
+        d.addEventListener('click', function(){
+          row.querySelectorAll('.opt').forEach(function(x){x.classList.remove('active');});
+          d.classList.add('active');
+          if (typeof window.updateSubmitState === 'function') window.updateSubmitState();
+        });
+        row.appendChild(d);
+      });
+      card.appendChild(title); card.appendChild(row);
+      list.appendChild(card);
     });
-    try{ mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true}); }catch(_){}
-  })();
+    if (typeof window.updateSubmitState === 'function') window.updateSubmitState();
+  }
+  function safeRenderNow(){
+    try{
+      ensureQuestions();
+      var list = document.getElementById('qList');
+      if (!list) return;
+      if (!list.children || list.children.length === 0){
+        if (typeof window.render === 'function'){ window.render(); }
+        if (!list.children || list.children.length === 0){ fallbackBuild(); }
+      }
+    }catch(e){ console.error('Render safeguard error:', e); }
+  }
+  window.addEventListener('load', safeRenderNow);
+  if (typeof window.startSurvey === 'function' && !window.startSurvey._patched){
+    var _orig = window.startSurvey;
+    window.startSurvey = function(){ _orig.apply(this, arguments); safeRenderNow(); };
+    window.startSurvey._patched = true;
+  }
 })();
 </script>
 
