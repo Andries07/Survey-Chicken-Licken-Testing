@@ -12,6 +12,7 @@
 
 <style>
   *,*::before,*::after{box-sizing:border-box}
+html, body{height:100%;background-image:url('./background.jpg');background-repeat:repeat;background-size:128px auto;background-position:top left;}
   :root{
     --card-rgba: rgba(0,0,0,0.65);
     --panel-rgba: rgba(255,255,255,0.78);
@@ -55,12 +56,7 @@
   .home .tiny{font-size:clamp(10px, 1.8vh, 13px);opacity:.85;margin-top:12px}
 
   /* Main survey */
-  .hero{
-    height:100dvh;
-    background-image:url('./background.jpg');
-    background-repeat:repeat;background-size:128px auto;background-position:top left;
-    display:grid;place-items:start center;padding:8px 2vw 10px;
-  }
+  .hero{min-height:100dvh;display:grid;place-items:center;padding:8px 2vw;background-image:url('./background.jpg');background-repeat:repeat;background-size:128px auto;background-position:top left;}
   .wrap{
     width:min(760px,96vw);height:100%;
     display:grid;grid-template-rows:auto 1fr auto;gap:6px;
@@ -182,12 +178,33 @@ function getParam(k){const u=new URL(location.href);return normSpaces(u.searchPa
 function getDeviceId(){const keys=['deviceId','deviceid','did','DeviceId','DEVICEID'];let v=getParamAny(keys);if(v){localStorage.setItem('cl_deviceId',v);return v;}v=localStorage.getItem('cl_deviceId')||'';if(v)return v;v=(prompt('Enter device ID (e.g. A9-Front-01)')||'').trim();if(v)localStorage.setItem('cl_deviceId',v);return v;}
 
 /* ===== CONFIG ===== */
+
+<script>
+  const STORE_BY_SLUG = {
+    "witbank-highveld":"CL-Witbank-Highveld",
+    "witbank-conradie":"CL-Witbank-Conradie",
+    "saveways":"CL-Saveways",
+    "sasol":"CL-Sasol",
+    "midellburg-mall":"CL-Midellburg-Mall",
+    "mhluzi":"CL-Mhluzi",
+    "groblersdal-mall":"CL-Groblersdal-Mall",
+    "epping":"CL-Epping",
+    "cape-station":"CL-Cape-Station",
+    "athlone":"CL-Athlone",
+    "bronkhorstspruit":"CL-Bronkhorstspruit"
+  };
+  function normSpaces(v){return v==null?'':String(v).trim();}
+  function getParam(k){const u=new URL(location.href);return normSpaces(u.searchParams.get(k));}
+  const _slug = getParam('s');
+  const _source = getParam('source'); // "qr" when scanned from poster
+</script>
+
 const CFG = {
-  apiUrl: "https://script.google.com/macros/s/AKfycbxb8JHst8eLOM1OvaEBDoXMmWMjUUwtKlgwtCJc4faD4myBvqhzfAJ1T7NYTI2dGX0i/exec", // set this
+  apiUrl: "https://script.google.com/macros/s/AKfycbynpKz1Q-4-PJiRByGDzDaJSUkw8P9QMhiHfImBqveGDfL1yyzXmeaaaKZNf77zT1yY/exec", // set this
   token:  "CHANGE_ME_SUPER_SECRET",               // must match Apps Script SHARED_TOKEN
-  storeId:     getParam('store')  || 'CL-Witbank-Highveld',
-  deviceLabel: getParam('device') || 'Front Counter',
-  deviceId:    getDeviceId()
+  storeId: STORE_BY_SLUG[_slug] || getParam('store') || 'CL-Witbank-Highveld',
+  deviceLabel: (_source === 'qr' ? 'QR Poster' : (getParam('device') || 'Front Counter')),
+  deviceId: (_source === 'qr' ? ('QR-' + (_slug || getParam('store') || 'unknown')) : getDeviceId())
 };
 
 /* ===== QUESTIONS ===== */
