@@ -327,6 +327,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
   submit.addEventListener('click',()=>{
     if(inFlight) return;
 
+    /* Block if QR device already submitted in last 24h */
+    if (typeof window.CL_QR_canSubmit === 'function' && !window.CL_QR_canSubmit()){
+      toast('You have already submitted a review in the last 24 hours.');
+      return;
+    }
+
     if(!allAnswered()){toast('Please answer all questions');return;}
     const any=detailsAnyFilled();
     if(any){
@@ -362,6 +368,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     submit.disabled = true;
     fireAndForgetSend(JSON.stringify(payload));
     dupLocalMark();
+    if (typeof window.CL_QR_markSubmitted === 'function') window.CL_QR_markSubmitted();
     showThanks();
   });
 });
@@ -388,10 +395,12 @@ function resetForm(){
 function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.textContent=msg;clearTimeout(s._t);s._t=setTimeout(()=>s.textContent='',1600);}
 </script>
 
-<!-- QR overlay: add ?s=<slug>&source=qr; tag as QR Poster (no UI changes) -->
+<!-- QR overlay: add ?s=<slug>&source=qr; tag as QR Poster; add 24h cooldown + qrUid -->
 <script>
 (function(){
   function qp(k){ try{ return (new URL(location.href).searchParams.get(k)||'').trim(); }catch(_){ return '' } }
+  function gen(){ return 'qr_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
   var STORE_BY_SLUG = {
     "witbank-highveld":"CL-Witbank-Highveld",
     "witbank-conradie":"CL-Witbank-Conradie",
@@ -405,14 +414,52 @@ function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.
     "athlone":"CL-Athlone",
     "bronkhorstspruit":"CL-Bronkhorstspruit"
   };
+
   var slug = (qp('s')||'').toLowerCase();
   var src  = (qp('source')||'').toLowerCase();
   if (slug && STORE_BY_SLUG[slug]) { CFG.storeId = STORE_BY_SLUG[slug]; }
   if (src === 'qr') {
     CFG.deviceLabel = 'QR Poster';
     CFG.deviceId = 'QR-' + (slug || (qp('store')||'unknown'));
-    try{ if(!localStorage.getItem('cl_qr_uid')) localStorage.setItem('cl_qr_uid', 'qr_' + Math.random().toString(36).slice(2) + Date.now().toString(36)); }catch(_){}
+    try{ if(!localStorage.getItem('cl_qr_uid')) localStorage.setItem('cl_qr_uid', gen()); }catch(_){}
   }
+
+  /* --- 24h cooldown per QR browser (localStorage) --- */
+  window.CL_QR_canSubmit = function(){
+    try{
+      if (CFG.deviceLabel !== 'QR Poster') return true;
+      var uid = localStorage.getItem('cl_qr_uid')||'';
+      if (!uid) return true;
+      var key = 'cl_qr_last_' + uid;
+      var last = parseInt(localStorage.getItem(key)||'0',10);
+      if (last && (Date.now()-last) < 24*60*60*1000) return false;
+      return true;
+    }catch(_){ return true; }
+  };
+  window.CL_QR_markSubmitted = function(){
+    try{
+      if (CFG.deviceLabel !== 'QR Poster') return;
+      var uid = localStorage.getItem('cl_qr_uid')||'';
+      if (!uid) return;
+      localStorage.setItem('cl_qr_last_' + uid, String(Date.now()));
+    }catch(_){}
+  };
+
+  /* Wrap fireAndForgetSend to inject qrUid for server visibility (no styling changes) */
+  (function(){
+    var orig = window.fireAndForgetSend;
+    if (!orig) return;
+    window.fireAndForgetSend = function(bodyStr){
+      try{
+        if (CFG.deviceLabel === 'QR Poster'){
+          var obj = JSON.parse(bodyStr);
+          obj.qrUid = localStorage.getItem('cl_qr_uid') || '';
+          bodyStr = JSON.stringify(obj);
+        }
+      }catch(_){}
+      return orig.call(this, bodyStr);
+    };
+  })();
 })();
 </script>
 
