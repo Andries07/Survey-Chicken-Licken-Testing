@@ -15,48 +15,21 @@
 html, body{height:100%;background-image:url('./background.jpg');background-repeat:repeat;background-size:128px auto;background-position:top left;}
   :root{
     --card-rgba: rgba(0,0,0,0.65);
-    --panel-rgba: rgba(255,255,255,0.78);
     --field-rgba: rgba(255,255,255,0.9);
-    --text:#111;
-    --green:#16a34a; --green2:#22c55e; --yellow:#facc15; --orange:#fb923c; --red:#dc2626;
+    --accent:#ff6900;
+    --green:#2da44e;
+    --green2:#63c174;
+    --yellow:#f7d070;
+    --orange:#ff8a3d;
+    --red:#ef4444;
   }
-  html,body{margin:0;height:100%;font-family:Arial,system-ui,-apple-system,sans-serif;background:#000}
-
-  /* Splash / Home */
-  .home{
-    position:fixed;inset:0;z-index:30;display:grid;place-items:center;
-    background-image:url('./background.jpg');background-repeat:repeat;background-size:128px auto;
-    padding:20px;
-    /* Ensure taps are treated as clicks immediately on Android */
-    touch-action: manipulation;
-    -webkit-user-select:none;user-select:none;
+  html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#111;color:#fff}
+  .page{min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto}
+  .hero{
+    min-height:100dvh;display:grid;place-items:center;padding:8px 2vw;
+    background-image:url('./background.jpg');
+    background-repeat:repeat;background-size:128px auto;background-position:top left;
   }
-  .home .card{
-    position:relative;z-index:2;
-    background:var(--card-rgba);color:#fff;padding:24px;border-radius:16px;text-align:center;
-    width:min(680px,94vw);
-    box-shadow:0 18px 54px rgba(0,0,0,.55);
-    cursor:pointer; /* whole card is tappable */
-  }
-  /* BIG headline tuned for Galaxy Tab A9 but responsive everywhere */
-  .home h1{
-    margin:0 0 12px;
-    font-size:clamp(34px, 9.5vh, 64px);
-    line-height:1.04;letter-spacing:.3px;
-  }
-  .home p{margin:0 0 16px;opacity:.95;font-size:clamp(15px, 2.3vh, 20px)}
-  .home .cta{
-    display:inline-block;
-    background:#ff6900;color:#fff;border:0;border-radius:14px;
-    padding:18px 22px;font-weight:900;font-size:clamp(18px, 3.2vh, 24px);
-    cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.35);
-    -webkit-tap-highlight-color:transparent;
-    touch-action: manipulation;
-  }
-  .home .tiny{font-size:clamp(10px, 1.8vh, 13px);opacity:.85;margin-top:12px}
-
-  /* Main survey */
-  .hero{min-height:100dvh;display:grid;place-items:center;padding:8px 2vw;background-image:url('./background.jpg');background-repeat:repeat;background-size:128px auto;background-position:top left;}
   .wrap{
     width:min(760px,96vw);height:100%;
     display:grid;grid-template-rows:auto 1fr auto;gap:6px;
@@ -68,12 +41,30 @@ html, body{height:100%;background-image:url('./background.jpg');background-repea
 
   .content{min-height:0;overflow:hidden;display:grid;grid-template-rows:auto auto;gap:6px}
   .grid{display:grid;gap:6px}
-  .card{background:var(--panel-rgba);border-radius:10px;padding:8px;box-shadow:0 6px 14px rgba(0,0,0,.22);backdrop-filter:saturate(120%) blur(2px)}
-  .q-title{font-weight:900;font-size:15px;line-height:1.2;margin-bottom:4px;color:var(--text);letter-spacing:.2px}
 
-  .q-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
-  .opt{display:grid;place-items:center;gap:2px;padding:7px;min-height:42px;border-radius:9px;color:#fff;font-weight:800;cursor:pointer;border:2px solid transparent;user-select:none}
-  .opt.active{outline:3px solid #000}
+  .card{
+    background:var(--card-rgba);
+    border-radius:16px;
+    padding:14px 14px;
+    box-shadow: 0 10px 22px rgba(0,0,0,.24), 0 2px 8px rgba(0,0,0,.3);
+    backdrop-filter: blur(6px);
+  }
+
+  .cta{
+    appearance:none;border:0;border-radius:999px;background:var(--accent);
+    color:#fff;font-weight:800;font-size:16px;line-height:1;padding:14px 20px;cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 -2px 0 rgba(0,0,0,.25);
+    display:block;margin:8px auto 2px auto
+  }
+  .cta:active{transform:translateY(1px)}
+
+  .q{font-weight:800;margin:0}
+  .opts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .opt{
+    display:grid;gap:2px;place-items:center;
+    padding:10px;border-radius:12px;cursor:pointer;user-select:none;border:0
+  }
+  .opt:active{transform:translateY(1px)}
   .opt[data-score="5"]{background:var(--green)}
   .opt[data-score="4"]{background:var(--green2)}
   .opt[data-score="3"]{background:var(--yellow);color:#111}
@@ -89,32 +80,27 @@ html, body{height:100%;background-image:url('./background.jpg');background-repea
   .tiny{font-size:11px;color:#444;margin-top:2px}
   .error{outline:2px solid #dc2626}
 
-  .row-end{display:flex;justify-content:space-between;align-items:center;gap:6px}
-  .btn{background:#000;color:#fff;border:0;border-radius:10px;padding:9px 12px;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.25)}
-  .btn:disabled{opacity:.6;cursor:not-allowed}
-  .muted{color:#ffffff;opacity:.9;font-size:12px;min-height:16px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{background:#fff;color:#111;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer;border:0}
+  .chip[data-on="1"]{background:#111;color:#fff;outline: 2px solid #fff}
 
-  .thanks{display:none;position:fixed;inset:0;z-index:20;place-items:center}
-  .thanks::before{content:"";position:absolute;inset:0;background-image:url('./background.jpg');background-repeat:repeat;background-size:128px auto;opacity:.85}
-  .thanks .in{position:relative;background:#fff;padding:14px;border-radius:12px;text-align:center;width:min(320px,92vw);box-shadow:0 18px 54px rgba(0,0,0,.4)}
+  footer{font-size:11px;color:#bbb;text-align:center;padding:8px 0}
 </style>
 </head>
 <body>
-<script>
-  /* purge old caches/service workers to avoid stale JS */
-  if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()));}
-  if('caches' in window){caches.keys().then(k=>k.forEach(c=>caches.delete(c)));}
-</script>
 
-<!-- HOME / SPLASH -->
-<div class="home" id="home" aria-label="Start feedback">
-  <div class="card" id="homeCard" role="button" aria-pressed="false">
-    <h1>Please rate our service ⭐</h1>
-    <p>Tap below to give quick feedback and help us improve.</p>
-    <!-- Inline handler + role added -->
-    <button class="cta" id="startBtn" type="button" onclick="startSurvey()" role="button">Rate our service</button>
-    <div class="tiny">Chicken Licken — Quick Feedback</div>
+<div class="page" id="home">
+  <div class="hero" id="hero">
+    <div class="wrap">
+      <div class="card" id="homeCard" role="button" aria-pressed="false">
+        <h1>Please rate our service ⭐</h1>
+        <p>Tap below to give quick feedback and help us improve.</p>
+        <button class="cta" id="startBtn" type="button" onclick="startSurvey()" role="button">Rate our service</button>
+        <div class="tiny">Chicken Licken — Quick Feedback</div>
+      </div>
+    </div>
   </div>
+  <footer>v1.0</footer>
 </div>
 
 <!-- SURVEY -->
@@ -123,61 +109,42 @@ html, body{height:100%;background-image:url('./background.jpg');background-repea
     <h1>Chicken Licken Quick Feedback</h1>
 
     <div class="content">
-      <!-- QUESTIONS -->
-      <div id="qList" class="grid"></div>
+      <div class="grid">
+        <div class="card">
+          <p class="q">How was our service today?</p>
 
-      <!-- OPTIONAL DETAILS -->
-      <div class="card">
-        <h3 class="q-title" style="margin:0 0 4px">Optional details</h3>
-        <div class="tiny">If you add details, <b>Name</b>, <b>Surname</b> and a valid <b>10-digit Phone</b> are required and you must accept POPIA.</div>
-        <div class="grid2" style="margin-top:6px">
-          <div><input id="name" placeholder="Name" autocomplete="off" maxlength="50"></div>
-          <div><input id="surname" placeholder="Surname" autocomplete="off" maxlength="50"></div>
+          <div class="grid" id="qs"></div>
         </div>
-        <div class="grid2" style="margin-top:6px">
-          <div><input id="phone" placeholder="Phone (10 digits)" maxlength="10" autocomplete="off" inputmode="numeric" pattern="[0-9]*"></div>
-          <div><input id="email" placeholder="Email (optional)" autocomplete="off" inputmode="email"></div>
+
+        <div class="card">
+          <p class="q">Leave your details (optional)</p>
+          <div class="grid2">
+            <div><input id="name" placeholder="Name"></div>
+            <div><input id="surname" placeholder="Surname"></div>
+          </div>
+          <div class="grid2">
+            <div><input id="phone" placeholder="Phone (10 digits)"></div>
+            <div><input id="email" placeholder="Email"></div>
+          </div>
+          <div><textarea id="feedback" placeholder="Anything we can improve? (optional)"></textarea></div>
+          <label class="tiny"><input type="checkbox" id="popia"> I consent to be contacted about my feedback (POPIA)</label>
+          <label class="tiny"><input type="checkbox" id="marketing"> I want to receive specials (optional)</label>
         </div>
-        <div style="margin-top:6px">
-          <textarea id="feedback" placeholder="Additional feedback (optional)" autocomplete="off" maxlength="3000"></textarea>
+
+        <div>
+          <button id="submitBtn" class="cta" disabled>Submit feedback</button>
+          <div class="tiny">By submitting you agree to our terms.</div>
         </div>
-        <label style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;margin-top:6px">
-          <input type="checkbox" id="popia" style="margin-top:3px">
-          <small>I consent to processing my personal info for service quality in line with POPIA.</small>
-        </label>
-        <label style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;margin-top:4px">
-          <input type="checkbox" id="mk" style="margin-top:3px">
-          <small>I agree to receive promotions and can unsubscribe anytime.</small>
-        </label>
+      </div>
+
+      <div class="card" id="thanks" style="display:none">
+        <h1>Thank you! 🧡</h1>
+        <p>Your feedback helps us improve.</p>
       </div>
     </div>
 
-    <!-- FOOTER -->
-    <div class="row-end">
-      <div class="muted" id="storeTag"></div>
-      <div class="muted" id="statusTxt"></div>
-      <button class="btn" id="submitBtn" disabled>Submit</button>
-    </div>
   </div>
 </div>
-
-<!-- THANK YOU -->
-<div class="thanks" id="thanks">
-  <div class="in">
-    <h2 style="margin:0 0 6px">Thank you!</h2>
-    <p style="margin:0 0 6px">Your feedback was recorded.</p>
-    <div class="tiny">Ready for the next customer…</div>
-  </div>
-</div>
-
-<script>
-/* ===== UTIL ===== */
-function normSpaces(s){return (s||'').replace(/\+/g,' ').trim();}
-function getParamAny(keys){const u=new URL(location.href);for(const k of keys){const v=u.searchParams.get(k);if(v)return normSpaces(v);}if(u.hash&&u.hash.includes('=')){const h=new URLSearchParams(u.hash.replace(/^#/,''));for(const k of keys){const v=h.get(k);if(v)return normSpaces(v);}}return '';}
-function getParam(k){const u=new URL(location.href);return normSpaces(u.searchParams.get(k));}
-function getDeviceId(){const keys=['deviceId','deviceid','did','DeviceId','DEVICEID'];let v=getParamAny(keys);if(v){localStorage.setItem('cl_deviceId',v);return v;}v=localStorage.getItem('cl_deviceId')||'';if(v)return v;v=(prompt('Enter device ID (e.g. A9-Front-01)')||'').trim();if(v)localStorage.setItem('cl_deviceId',v);return v;}
-
-/* ===== CONFIG ===== */
 
 <script>
   const STORE_BY_SLUG = {
@@ -199,61 +166,95 @@ function getDeviceId(){const keys=['deviceId','deviceid','did','DeviceId','DEVIC
   const _source = getParam('source'); // "qr" when scanned from poster
 </script>
 
+<script>
 const CFG = {
-  apiUrl: "https://script.google.com/macros/s/AKfycbxrQnYxMBccnr2ayv_cDHlk4SXTSRB_ruj8-l1jPbLONRHwNFLBsCHkC97yJ72FdMWNkg/exec", // set this
+  apiUrl: "https://script.google.com/macros/s/AKfycbxb8JHst8eLOM1OvaEBDoXMmWMjUUwtKlgwtCJc4faD4myBvqhzfAJ1T7NYTI2dGX0i/exec", // set this
   token:  "CHANGE_ME_SUPER_SECRET",               // must match Apps Script SHARED_TOKEN
-  storeId: STORE_BY_SLUG[_slug] || getParam('store') || 'CL-Witbank-Highveld',
+
+  // storeId now supports short slug (s=) and classic store=
+  storeId:     STORE_BY_SLUG[_slug] || getParam('store') || 'CL-Witbank-Highveld',
+
+  // When source=qr (from poster), label and id are clearly marked
   deviceLabel: (_source === 'qr' ? 'QR Poster' : (getParam('device') || 'Front Counter')),
-  deviceId: (_source === 'qr' ? ('QR-' + (_slug || getParam('store') || 'unknown')) : getDeviceId())
+  deviceId:    (_source === 'qr' ? ('QR-' + (_slug || getParam('store') || 'unknown')) : getDeviceId())
 };
 
 /* ===== QUESTIONS ===== */
 const QUESTIONS=[
-  {id:'Q1',text:'Speed of service'},
-  {id:'Q2',text:'Friendliness of staff'},
-  {id:'Q3',text:'Order accuracy'},
-  {id:'Q4',text:'Cleanliness of store'},
-  {id:'Q5',text:'Overall experience'}
+  {id:'Speed of service',text:'Speed of service'},
+  {id:'Friendliness of staff',text:'Friendliness of staff'},
+  {id:'Order accuracy',text:'Order accuracy'},
+  {id:'Cleanliness of store',text:'Cleanliness of store'},
+  {id:'Overall experience',text:'Overall experience'}
 ];
+
+// Emoji scale preserved
 const CHOICES=[
-  {txt:'Excellent',score:5,emo:'😄'},
-  {txt:'Good',     score:4,emo:'🙂'},
-  {txt:'Average',  score:3,emo:'😐'},
-  {txt:'Poor',     score:2,emo:'🙁'},
-  {txt:'Bad',      score:1,emo:'😡'}
+  {text:'Excellent',score:5,emo:'😍'},
+  {text:'Good',score:4,emo:'😊'},
+  {text:'Okay',score:3,emo:'😐'},
+  {text:'Poor',score:2,emo:'😟'},
+  {text:'Terrible',score:1,emo:'😡'}
 ];
 
-/* ===== RENDER ===== */
-function makeQuestion(q){
-  const card=document.createElement('div');card.className='card';
-  const title=document.createElement('div');title.className='q-title';title.textContent=q.text;
-  const row=document.createElement('div');row.className='q-row';row.dataset.qid=q.id;
-  CHOICES.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='opt';d.dataset.score=c.score;
-    d.innerHTML=`<div class="emo">${c.emo}</div><div class="lbl">${c.txt}</div>`;
-    d.addEventListener('click',()=>{
-      row.querySelectorAll('.opt').forEach(x=>x.classList.remove('active'));
-      d.classList.add('active');updateSubmitState();
-    });
-    row.appendChild(d);
-  });
-  card.appendChild(title);card.appendChild(row);
-  return card;
-}
-function render(){
-  const list=document.getElementById('qList');list.innerHTML='';
-  QUESTIONS.forEach(q=>list.appendChild(makeQuestion(q)));
-  document.getElementById('storeTag').textContent=`${CFG.storeId} • ${CFG.deviceLabel} • ${CFG.deviceId||'no deviceId'}`;
+function getDeviceId(){
+  const keys=['deviceId','deviceid','did','DeviceId'];
+  for(const k of keys){const v=getParam(k); if(v){ localStorage.setItem('cl_deviceId',v); return v; }}
+  let v=localStorage.getItem('cl_deviceId');
+  if(!v) v=('A9-' + Math.random().toString(16).slice(2,10)).toUpperCase();
+  v=String(v||'').trim();
+  if(v) localStorage.setItem('cl_deviceId',v);
+  return v;
 }
 
-/* ===== VALIDATION ===== */
-function val(id){return(document.getElementById(id).value||'').trim();}
-function detailsAnyFilled(){return!!(val('name')||val('surname')||val('phone')||val('email')||val('feedback'));}
-function allAnswered(){return QUESTIONS.every(q=>document.querySelector(`.q-row[data-qid="${q.id}"] .opt.active`));}
-function markError(id,on){const el=document.getElementById(id);if(el)el.classList.toggle('error',!!on);}
+function sel(qId,choice){
+  // track selection
+  ans[qId]=choice;
+  renderQs();
+  updateSubmitState();
+}
+
+function el(tag,attrs,...kids){
+  const n=document.createElement(tag);
+  if(attrs) for(const k in attrs){
+    if(k==='dataset'){ for(const dk in attrs.dataset) n.dataset[dk]=attrs.dataset[dk]; }
+    else if(k==='on'){ for(const evt in attrs.on) n.addEventListener(evt,attrs.on[evt]); }
+    else if(k==='html'){ n.innerHTML=attrs.html; }
+    else n.setAttribute(k,attrs[k]);
+  }
+  for(const k of kids){ if(k!=null) n.append(k) }
+  return n;
+}
+
+let ans={};
+function renderQs(){
+  const qs=document.getElementById('qs'); qs.innerHTML='';
+  QUESTIONS.forEach(q=>{
+    const row=el('div', {class:'grid'});
+    row.append(el('p',{class:'q'}, q.text));
+    const opts=el('div',{class:'opts'});
+    CHOICES.forEach(c=>{
+      const b=el('button',{class:'opt',dataset:{score:c.score},on:{click:()=>sel(q.id,c)}},
+        el('div',{class:'emo'}, c.emo),
+        el('div',{class:'lbl'}, c.text)
+      );
+      if(ans[q.id]===c) b.style.outline='3px solid #fff';
+      opts.append(b);
+    });
+    row.append(opts);
+    qs.append(row);
+  });
+}
+
+function val(id){ return normSpaces(document.getElementById(id)?.value || '') }
+function markError(id,on){ const el=document.getElementById(id); if(!el) return; if(on) el.classList.add('error'); else el.classList.remove('error') }
+
+function detailsAnyFilled(){
+  return !!(val('name') || val('surname') || val('phone') || val('email') || val('feedback'));
+}
+
 function updateSubmitState(){
-  let ok=allAnswered();
+  let ok=true;
   const any=detailsAnyFilled();
   const requireName=any&&!val('name');
   const requireSurname=any&&!val('surname');
@@ -269,136 +270,72 @@ function updateSubmitState(){
 document.addEventListener('input',updateSubmitState);
 
 /* ===== FLOW ===== */
-const homeEl = document.getElementById('home');
-const homeCard = document.getElementById('homeCard');
-const startBtn = document.getElementById('startBtn');
-const surveyEl = document.getElementById('survey');
-
-function startSurvey(){
-  try{
-    homeEl.style.display='none';
-    surveyEl.style.display='grid';
-    render();
-  }catch(e){ console.error('startSurvey error', e); }
-}
-
-/* Multiple bindings so at least one works everywhere */
-document.addEventListener('DOMContentLoaded', ()=>{
-  // Button (primary)
-  if (startBtn && !startBtn._bound) {
-    startBtn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); startSurvey(); }, { passive:false });
-    startBtn._bound = true;
-  }
-  // Whole card (secondary)
-  if (homeCard && !homeCard._bound) {
-    homeCard.addEventListener('click', (e)=>{
-      // Ignore clicks if they come from the footer tiny text only
-      const tiny = e.target.closest('.tiny'); if(tiny) return;
-      startSurvey();
-    }, { passive:true });
-    homeCard._bound = true;
-  }
-  // Key access (Enter / Space)
-  homeCard.addEventListener('keydown', (e)=>{
-    if (e.code === 'Enter' || e.code === 'Space'){ e.preventDefault(); startSurvey(); }
-  });
-});
-
-/* ===== SUBMIT (one-tap lock + instant thanks) ===== */
-let inFlight = false;
-function within24h(ts){return (Date.now() - Number(ts)) < 24*60*60*1000;}
-function dupLocalBlockIfAny(){
-  const phone=val('phone'); const email=(val('email')||'').toLowerCase();
-  if(!phone && !email) return false;
-  const kP = phone ? `cl_last_phone_${phone}` : null;
-  const kE = email ? `cl_last_email_${email}` : null;
-  if(kP && localStorage.getItem(kP) && within24h(localStorage.getItem(kP))) return true;
-  if(kE && localStorage.getItem(kE) && within24h(localStorage.getItem(kE))) return true;
-  return false;
-}
-function dupLocalMark(){
-  const phone=val('phone'); const email=(val('email')||'').toLowerCase();
-  if(phone) localStorage.setItem(`cl_last_phone_${phone}`, String(Date.now()));
-  if(email) localStorage.setItem(`cl_last_email_${email}`, String(Date.now()));
-}
-
-function fireAndForgetSend(bodyStr){
-  try{
-    const ok = navigator.sendBeacon(CFG.apiUrl, new Blob([bodyStr], {type:'text/plain;charset=utf-8'}));
-    if(ok) return;
-  }catch(_){}
-  try{
-    fetch(CFG.apiUrl,{ method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:bodyStr, keepalive:true });
-  }catch(_){}
-}
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  const submit = document.getElementById('submitBtn');
-  if(!submit) return;
-  submit.addEventListener('click',()=>{
-    if(inFlight) return;
-
-    if(!allAnswered()){toast('Please answer all questions');return;}
-    const any=detailsAnyFilled();
-    if(any){
-      if(!val('name')){toast('Please enter your Name');return;}
-      if(!val('surname')){toast('Please enter your Surname');return;}
-      const ph=val('phone');if(!/^\d{10}$/.test(ph)){toast('Enter a valid 10-digit Phone');return;}
-      if(!document.getElementById('popia').checked){toast('Tick POPIA consent');return;}
-    }
-    const em=val('email');if(em&&!/.+@.+\..+/.test(em)){toast('Enter a valid Email');return;}
-    if(dupLocalBlockIfAny()){ toast('You have already submitted in the last 24 hours.'); return; }
-
-    const answers=QUESTIONS.map(q=>{
-      const el=document.querySelector(`.q-row[data-qid="${q.id}"] .opt.active`);
-      const score=Number(el.dataset.score);
-      const ch=CHOICES.find(c=>c.score===score);
-      return{questionId:q.text,choiceText:ch.txt,choiceScore:score};
-    });
-
-    const payload={
-      token:CFG.token,
-      clientId:`${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      storeId:CFG.storeId,deviceLabel:CFG.deviceLabel,deviceId:CFG.deviceId,
-      pressedAtUtc:new Date().toISOString(),answers,
-      marketingConsent:document.getElementById('mk').checked===true,
-      customer:{
-        name:val('name'),surname:val('surname'),phone:val('phone'),
-        email:val('email'),feedback:val('feedback'),
-        consent:document.getElementById('popia').checked||null
-      }
-    };
-
-    inFlight = true;
-    submit.disabled = true;
-    fireAndForgetSend(JSON.stringify(payload));
-    dupLocalMark();
-    showThanks();
-  });
-});
-
 function showThanks(){
-  const el=document.getElementById('thanks');
-  el.style.display='grid';
-  clearTimeout(el._t);
-  el._t=setTimeout(()=>{
-    el.style.display='none';
-    resetForm();
-    surveyEl.style.display='none';
-    homeEl.style.display='grid';
-  }, 3000);
+  document.getElementById('thanks').style.display='block';
+  setTimeout(()=>{ location.href=location.pathname; }, 3000);
 }
-function resetForm(){
-  document.querySelectorAll('.opt').forEach(x=>x.classList.remove('active'));
-  ['name','surname','phone','email','feedback'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
-  document.getElementById('popia').checked=false;
-  document.getElementById('mk').checked=false;
-  inFlight = false;
+
+async function doSubmit(){
+  const answers=QUESTIONS.map(q=>({questionId:q.id,choiceText:ans[q.id]?.text||'',choiceScore:ans[q.id]?.score||''}));
+  const payload={
+    token:CFG.token,
+    clientId: String(Date.now()) + '-' + Math.random().toString(16).slice(2,8),
+    storeId: CFG.storeId,
+    deviceLabel: CFG.deviceLabel,
+    deviceId: CFG.deviceId,
+    pressedAtUtc: new Date().toISOString(),
+    answers,
+    customer:{
+      name:val('name'),
+      surname:val('surname'),
+      phone:val('phone'),
+      email:val('email'),
+      feedback:val('feedback'),
+      consent: document.getElementById('popia').checked || false
+    },
+    marketingConsent: document.getElementById('marketing').checked || false
+  };
+
+  // Instant UI feedback
+  document.getElementById('submitBtn').disabled=true;
+  document.getElementById('thanks').style.display='block';
+
+  // Try sendBeacon first (fire-and-forget)
+  let sent=false;
+  try{
+    const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
+    if(navigator.sendBeacon){
+      sent = navigator.sendBeacon(CFG.apiUrl, blob);
+    }
+  }catch(_){}
+
+  // Fallback to fetch
+  if(!sent){
+    try{
+      await fetch(CFG.apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }catch(_){}
+  }
+
+  // Reset after 3s (gives server time)
+  setTimeout(()=>{ location.href=location.pathname; }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  renderQs();
   updateSubmitState();
+  document.getElementById('submitBtn').addEventListener('click',doSubmit);
+});
+
+// Global entry for the home button
+function startSurvey(){
+  var home=document.getElementById('home');
+  var survey=document.getElementById('survey');
+  if(home) home.style.display='none';
+  if(survey) survey.style.display='block';
+  window.scrollTo(0,0);
+  var first=document.querySelector('#survey button, #survey input, #survey textarea, #survey select');
+  if(first) first.focus();
 }
-function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.textContent=msg;clearTimeout(s._t);s._t=setTimeout(()=>s.textContent='',1600);}
 </script>
 </body>
 </html>
