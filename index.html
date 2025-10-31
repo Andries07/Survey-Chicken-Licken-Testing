@@ -182,8 +182,7 @@ function getDeviceId(){const keys=['deviceId','deviceid','did','DeviceId','DEVIC
 
 /* ===== CONFIG ===== */
 const CFG = {
-  apiUrl: "https://script.google.com/macros/s/AKfycbzKKnv_zRA20JHbnBnoo2S9PO9Rho-OqKIFaRCihD7eXkbrgcxZJQxrm95aQ5bHjBZdZg/exec
-",
+  apiUrl: "https://script.google.com/macros/s/AKfycbzKKnv_zRA20JHbnBnoo2S9PO9Rho-OqKIFaRCihD7eXkbrgcxZJQxrm95aQ5bHjBZdZg/exec",
   token:  "CHANGE_ME_SUPER_SECRET",
   storeId:     getParam('store')  || 'CL-Witbank-Highveld',
   deviceLabel: getParam('device') || 'Front Counter',
@@ -232,7 +231,17 @@ function render(){
 
 /* ===== VALIDATION ===== */
 function val(id){return(document.getElementById(id).value||'').trim();}
-function detailsAnyFilled(){return!!(val('name')||val('surname')||val('phone')||val('email')||val('feedback'));}
+
+/* Strict details detector to avoid iOS/autofill false positives */
+function detailsAnyFilled(){
+  const name=val('name'), sur=val('surname'), ph=val('phone'), em=(val('email')||'').toLowerCase(), fb=val('feedback');
+  const hasName = name.length>=2, hasSur=sur.length>=2;
+  const hasPhone = /^\d{10}$/.test(ph);              // only counts if exactly 10 digits
+  const hasEmail = !!em && /.+@.+\..+/.test(em);     // only counts if valid
+  const hasFb = fb.length>=3;                         // ignore tiny accidental text
+  return hasName || hasSur || hasPhone || hasEmail || hasFb;
+}
+
 function allAnswered(){return QUESTIONS.every(q=>document.querySelector(`.q-row[data-qid="${q.id}"] .opt.active`));}
 function markError(id,on){const el=document.getElementById(id);if(el)el.classList.toggle('error',!!on);}
 function updateSubmitState(){
@@ -247,7 +256,8 @@ function updateSubmitState(){
   const badEmail=em&&!/.+@.+\..+/.test(em);
   markError('name',requireName);markError('surname',requireSurname);markError('phone',requirePhone);
   if(requireName||requireSurname||requirePhone||requirePOPIA||badEmail)ok=false;
-  document.getElementById('submitBtn').disabled=!ok;
+  const btn=document.getElementById('submitBtn'); if(btn) btn.disabled=!ok;
+  return ok;
 }
 document.addEventListener('input',updateSubmitState);
 
