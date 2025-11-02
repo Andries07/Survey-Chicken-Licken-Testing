@@ -178,7 +178,17 @@
 function normSpaces(s){return (s||'').replace(/\+/g,' ').trim();}
 function getParamAny(keys){const u=new URL(location.href);for(const k of keys){const v=u.searchParams.get(k);if(v)return normSpaces(v);}if(u.hash&&u.hash.includes('=')){const h=new URLSearchParams(u.hash.replace(/^#/,''));for(const k of keys){const v=h.get(k);if(v)return normSpaces(v);}}return '';}
 function getParam(k){const u=new URL(location.href);return normSpaces(u.searchParams.get(k));}
-function getDeviceId(){const keys=['deviceId','deviceid','did','DeviceId','DEVICEID'];let v=getParamAny(keys);if(v){localStorage.setItem('cl_deviceId',v);return v;}v=localStorage.getItem('cl_deviceId')||'';if(v)return v;v=(prompt('Enter device ID (e.g. A9-Front-01)')||'').trim();if(v)localStorage.setItem('cl_deviceId',v);return v;}
+function getDeviceId(){
+  // Accept both ?device=... and ?deviceId=... (plus common variants)
+  const keys=['device','deviceId','deviceid','did','DeviceId','DEVICEID'];
+  let v=getParamAny(keys);
+  if(v){localStorage.setItem('cl_deviceId',v);return v;}
+  v=localStorage.getItem('cl_deviceId')||'';
+  if(v)return v;
+  v=(prompt('Enter device ID (e.g. TAB-witbank-highveld)')||'').trim();
+  if(v)localStorage.setItem('cl_deviceId',v);
+  return v;
+}
 
 /* ===== CONFIG ===== */
 const CFG = {
@@ -216,7 +226,8 @@ function makeQuestion(q){
     d.innerHTML=`<div class="emo">${c.emo}</div><div class="lbl">${c.txt}</div>`;
     d.addEventListener('click',()=>{
       row.querySelectorAll('.opt').forEach(x=>x.classList.remove('active'));
-      d.classList.add('active');updateSubmitState();
+      d.addClassList?d.addClassList('active'):d.classList.add('active');
+      updateSubmitState();
     });
     row.appendChild(d);
   });
@@ -450,7 +461,7 @@ function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.
       };
     }catch(_){}
   }else{
-    /* tablet mode: allow multiple (controlled by your existing local dup rules if phone/email provided) */
+    /* tablet mode: allow multiple (you also have optional phone/email dup rule) */
     window.CL_QR_canSubmit = function(){ return true; };
     window.CL_QR_markSubmitted = function(){};
   }
