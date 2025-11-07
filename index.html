@@ -104,8 +104,8 @@
 <!-- minimal hotfix (no visual change to your design) -->
 <style>
   html, body { height:100%; min-height:100%; }
-  .home{ min-height:100svh !important; }                 /* centers splash on phones */
-  .hero{ min-height:100svh !important; height:auto !important; } /* removes black strip */
+  .home{ min-height:100svh !important; }
+  .hero{ min-height:100svh !important; height:auto !important; }
 </style>
 </head>
 <body>
@@ -179,7 +179,6 @@ function normSpaces(s){return (s||'').replace(/\+/g,' ').trim();}
 function getParamAny(keys){const u=new URL(location.href);for(const k of keys){const v=u.searchParams.get(k);if(v)return normSpaces(v);}if(u.hash&&u.hash.includes('=')){const h=new URLSearchParams(u.hash.replace(/^#/,''));for(const k of keys){const v=h.get(k);if(v)return normSpaces(v);}}return '';}
 function getParam(k){const u=new URL(location.href);return normSpaces(u.searchParams.get(k));}
 function getDeviceId(){
-  // Accept both ?device=... and ?deviceId=... (plus common variants)
   const keys=['device','deviceId','deviceid','did','DeviceId','DEVICEID'];
   let v=getParamAny(keys);
   if(v){localStorage.setItem('cl_deviceId',v);return v;}
@@ -226,7 +225,7 @@ function makeQuestion(q){
     d.innerHTML=`<div class="emo">${c.emo}</div><div class="lbl">${c.txt}</div>`;
     d.addEventListener('click',()=>{
       row.querySelectorAll('.opt').forEach(x=>x.classList.remove('active'));
-      d.addClassList?d.addClassList('active'):d.classList.add('active');
+      d.classList.add('active');
       updateSubmitState();
     });
     row.appendChild(d);
@@ -242,8 +241,6 @@ function render(){
 
 /* ===== VALIDATION ===== */
 function val(id){return(document.getElementById(id).value||'').trim();}
-
-/* strict to avoid autofill noise */
 function detailsAnyFilled(){
   const name=val('name'), sur=val('surname'), ph=val('phone'), em=(val('email')||'').toLowerCase(), fb=val('feedback');
   const hasName = name.length>=2, hasSur=sur.length>=2;
@@ -252,7 +249,6 @@ function detailsAnyFilled(){
   const hasFb = fb.length>=3;
   return hasName || hasSur || hasPhone || hasEmail || hasFb;
 }
-
 function allAnswered(){return QUESTIONS.every(q=>document.querySelector(`.q-row[data-qid="${q.id}"] .opt.active`));}
 function markError(id,on){const el=document.getElementById(id);if(el)el.classList.toggle('error',!!on);}
 function updateSubmitState(){
@@ -338,7 +334,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   submit.addEventListener('click',()=>{
     if(inFlight) return;
 
-    /* Block repeat only for QR modes */
     if (typeof window.CL_QR_canSubmit === 'function' && !window.CL_QR_canSubmit()){
       toast('You have already submitted a review in the last 24 hours.');
       return;
@@ -408,7 +403,7 @@ function resetForm(){
 function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.textContent=msg;clearTimeout(s._t);s._t=setTimeout(()=>s.textContent='',1600);}
 </script>
 
-<!-- QR overlay: ?s=<slug>&source=qr-in | qr-drive — sets device & 24h cooldown (no style changes) -->
+<!-- QR overlay -->
 <script>
 (function(){
   function qp(k){ try{ return (new URL(location.href).searchParams.get(k)||'').trim(); }catch(_){ return '' } }
@@ -429,7 +424,7 @@ function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.
   };
 
   var slug  = (qp('s')||'').toLowerCase();
-  var src   = (qp('source')||'').toLowerCase(); /* '', 'qr-in', 'qr-drive' */
+  var src   = (qp('source')||'').toLowerCase();
 
   if (slug && STORE_BY_SLUG[slug]) { CFG.storeId = STORE_BY_SLUG[slug]; }
 
@@ -448,7 +443,6 @@ function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.
       if(!uid){ uid = gen(); localStorage.setItem(uidKey, uid); }
       window.CL_QR_ctx.uid = uid;
 
-      /* --- 24h cooldown per mode+uid --- */
       window.CL_QR_canSubmit = function(){
         var key = 'cl_qr_last_' + mode + '_' + uid;
         var last = parseInt(localStorage.getItem(key)||'0',10);
@@ -461,14 +455,13 @@ function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.
       };
     }catch(_){}
   }else{
-    /* tablet mode: allow multiple (you also have optional phone/email dup rule) */
     window.CL_QR_canSubmit = function(){ return true; };
     window.CL_QR_markSubmitted = function(){};
   }
 })();
 </script>
 
-<!-- SAFETY PATCH: ensures QUESTIONS/CHOICES exist and renders if qList is empty -->
+<!-- render safeguard -->
 <script>
 (function(){
   function ensureQuestions(){
@@ -533,7 +526,7 @@ function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.
 })();
 </script>
 
-<!-- global startSurvey kept for your inline onclick -->
+<!-- global startSurvey kept for inline onclick -->
 <script>
 window.startSurvey = window.startSurvey || function(){
   try{
@@ -546,6 +539,43 @@ window.startSurvey = window.startSurvey || function(){
     if (first) first.focus();
   }catch(_){}
 };
+</script>
+
+<!-- === HEARTBEAT (non-blocking; no UI changes) === -->
+<script>
+(function(){
+  const HEARTBEAT_MS = 120000; // every 2 minutes
+
+  function endpoint(){ return (CFG && CFG.apiUrl) || null; }
+  function val(x, d){ return (typeof x !== 'undefined' && x !== null) ? x : d; }
+
+  async function ping(reason){
+    const url = endpoint(); if(!url) return;
+    const payload = {
+      type: 'heartbeat',
+      token: val(CFG && CFG.token, ''),
+      clientId: val((CFG && CFG.deviceId), '') + '-' + Date.now(),
+      storeId:  val(CFG && CFG.storeId, ''),
+      deviceId: val(CFG && CFG.deviceId, ''),
+      deviceLabel: val(CFG && CFG.deviceLabel, ''),
+      pageVisible: document.visibilityState === 'visible',
+      sentAtUtc: new Date().toISOString(),
+      reason: reason || 'interval',
+      userAgent: navigator.userAgent || ''
+    };
+    try { await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }); } catch(e) {}
+  }
+
+  function schedule(){
+    clearInterval(window.__hbInt);
+    setTimeout(()=>ping('initial'), 15000);
+    window.__hbInt = setInterval(()=>ping('interval'), HEARTBEAT_MS);
+  }
+
+  window.addEventListener('load',   ()=>{ schedule(); ping('load'); });
+  window.addEventListener('focus',  schedule);
+  document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='visible') schedule(); });
+})();
 </script>
 
 </body>
