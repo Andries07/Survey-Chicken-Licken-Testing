@@ -549,7 +549,25 @@ window.startSurvey = window.startSurvey || function(){
   function endpoint(){ return (CFG && CFG.apiUrl) || null; }
   function val(x, d){ return (typeof x !== 'undefined' && x !== null) ? x : d; }
 
-  async function ping(reason){
+  function hbSend(bodyStr){
+    try{
+      if (navigator.sendBeacon){
+        const ok = navigator.sendBeacon(endpoint(), new Blob([bodyStr], {type:'text/plain;charset=utf-8'}));
+        if (ok) return;
+      }
+    }catch(_){}
+    try{
+      fetch(endpoint(), {
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: bodyStr,
+        keepalive:true
+      });
+    }catch(_){}
+  }
+
+  function ping(reason){
     const url = endpoint(); if(!url) return;
     const payload = {
       type: 'heartbeat',
@@ -563,7 +581,7 @@ window.startSurvey = window.startSurvey || function(){
       reason: reason || 'interval',
       userAgent: navigator.userAgent || ''
     };
-    try { await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }); } catch(e) {}
+    hbSend(JSON.stringify(payload));
   }
 
   function schedule(){
