@@ -189,12 +189,38 @@ function getDeviceId(){
   return v;
 }
 
+function getStoreId(){
+  const keys=['store','Store','storeId','StoreId'];
+  let v=getParamAny(keys);
+  if(v){
+    try{ localStorage.setItem('cl_storeId',v); }catch(_){}
+    return v;
+  }
+  try{
+    const cached = localStorage.getItem('cl_storeId')||'';
+    if(cached) return cached;
+  }catch(_){}
+  return 'CL-Witbank-Highveld';
+}
+function getDeviceLabel(){
+  let v=getParam('device');
+  if(v){
+    try{ localStorage.setItem('cl_deviceLabel',v); }catch(_){}
+    return v;
+  }
+  try{
+    const cached = localStorage.getItem('cl_deviceLabel')||'';
+    if(cached) return cached;
+  }catch(_){}
+  return 'Front Counter';
+}
+
 /* ===== CONFIG ===== */
 const CFG = {
   apiUrl: "https://script.google.com/macros/s/AKfycbzKKnv_zRA20JHbnBnoo2S9PO9Rho-OqKIFaRCihD7eXkbrgcxZJQxrm95aQ5bHjBZdZg/exec",
   token:  "CHANGE_ME_SUPER_SECRET",
-  storeId:     getParam('store')  || 'CL-Witbank-Highveld',
-  deviceLabel: getParam('device') || 'Front Counter',
+  storeId:     getStoreId(),
+  deviceLabel: getDeviceLabel(),
   deviceId:    getDeviceId()
 };
 
@@ -425,7 +451,10 @@ function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.
   var slug  = (qp('s')||'').toLowerCase();
   var src   = (qp('source')||'').toLowerCase();
 
-  if (slug && STORE_BY_SLUG[slug]) { CFG.storeId = STORE_BY_SLUG[slug]; }
+  if (slug && STORE_BY_SLUG[slug]) {
+    CFG.storeId = STORE_BY_SLUG[slug];
+    try{ localStorage.setItem('cl_storeId', CFG.storeId); }catch(_){}
+  }
 
   window.CL_QR_ctx = { mode:'tablet', uid:'' };
 
