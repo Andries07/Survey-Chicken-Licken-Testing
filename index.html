@@ -178,16 +178,29 @@
 function normSpaces(s){return (s||'').replace(/\+/g,' ').trim();}
 function getParamAny(keys){const u=new URL(location.href);for(const k of keys){const v=u.searchParams.get(k);if(v)return normSpaces(v);}if(u.hash&&u.hash.includes('=')){const h=new URLSearchParams(u.hash.replace(/^#/,''));for(const k of keys){const v=h.get(k);if(v)return normSpaces(v);}}return '';}
 function getParam(k){const u=new URL(location.href);return normSpaces(u.searchParams.get(k));}
+
 function getDeviceId(){
   const keys=['device','deviceId','deviceid','did','DeviceId','DEVICEID'];
-  let v=getParamAny(keys);
-  if(v){localStorage.setItem('cl_deviceId',v);return v;}
-  v=localStorage.getItem('cl_deviceId')||'';
-  if(v)return v;
-  v=(prompt('Enter device ID (e.g. TAB-witbank-highveld)')||'').trim();
-  if(v)localStorage.setItem('cl_deviceId',v);
-  return v;
+
+  // 1) Prefer what’s in the URL (?deviceId=... or ?device=...)
+  let v = getParamAny(keys);
+  if (v){
+    try { localStorage.setItem('cl_deviceId', v); } catch(_) {}
+    return v;
+  }
+
+  // 2) Fall back to whatever was stored before (tablet remembered its ID)
+  try {
+    v = localStorage.getItem('cl_deviceId') || '';
+  } catch(_) {
+    v = '';
+  }
+  if (v) return v;
+
+  // 3) FINAL FALLBACK: no prompt, just "unknown" until QR/device logic overrides it
+  return 'UNKNOWN';
 }
+ 
 
 function getStoreId(){
   const keys=['store','Store','storeId','StoreId'];
