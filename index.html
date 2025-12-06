@@ -178,16 +178,7 @@
 function normSpaces(s){return (s||'').replace(/\+/g,' ').trim();}
 function getParamAny(keys){const u=new URL(location.href);for(const k of keys){const v=u.searchParams.get(k);if(v)return normSpaces(v);}if(u.hash&&u.hash.includes('=')){const h=new URLSearchParams(u.hash.replace(/^#/,''));for(const k of keys){const v=h.get(k);if(v)return normSpaces(v);}}return '';}
 function getParam(k){const u=new URL(location.href);return normSpaces(u.searchParams.get(k));}
-function getDeviceId(){
-  const keys=['device','deviceId','deviceid','did','DeviceId','DEVICEID'];
-  let v=getParamAny(keys);
-  if(v){localStorage.setItem('cl_deviceId',v);return v;}
-  v=localStorage.getItem('cl_deviceId')||'';
-  if(v)return v;
-  v=(prompt('Enter device ID (e.g. TAB-witbank-highveld)')||'').trim();
-  if(v)localStorage.setItem('cl_deviceId',v);
-  return v;
-}
+
 
 function getStoreId(){
   const keys=['store','Store','storeId','StoreId'];
