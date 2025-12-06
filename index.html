@@ -206,7 +206,29 @@ function getDeviceLabel(){
   return 'Front Counter';
 }
 
- function getDeviceId(){ return CFG.deviceId || 'DEFAULT'; }
+ 
+ function getDeviceId(){
+  // 1. Try URL parameters
+  const keys = ['device','deviceId','deviceid','did','DeviceId','DEVICEID'];
+  let v = getParamAny(keys);
+  if (v){
+    localStorage.setItem('cl_deviceId', v);
+    return v;
+  }
+
+  // 2. Try stored value in localStorage (for tablets that already saved it)
+  v = localStorage.getItem('cl_deviceId') || '';
+  if (v) return v;
+
+  // 3. FINAL FALLBACK: use config default (NO POPUP)
+  if (typeof CFG !== 'undefined' && CFG.deviceId){
+    return CFG.deviceId;
+  }
+
+  // 4. Last resort so code never crashes
+  return 'UNKNOWN';
+}
+
 
 /* ===== CONFIG ===== */
 const CFG = {
