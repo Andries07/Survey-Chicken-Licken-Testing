@@ -75,7 +75,8 @@
 
   .q-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
   .opt{display:grid;place-items:center;gap:2px;padding:7px;min-height:42px;border-radius:9px;color:#fff;font-weight:800;cursor:pointer;border:2px solid transparent;user-select:none}
-  .opt.active{outline:3px solid #000}
+  .opt.active{border-color:#000}
+  .opt:hover{border-color:#000}
   .opt[data-score="5"]{background:var(--green)}
   .opt[data-score="4"]{background:var(--green2)}
   .opt[data-score="3"]{background:var(--yellow);color:#111}
@@ -99,6 +100,31 @@
   .thanks{display:none;position:fixed;inset:0;z-index:20;place-items:center}
   .thanks::before{content:"";position:absolute;inset:0;background-image:url('./background.jpg');background-repeat:repeat;background-size:128px auto;opacity:.85}
   .thanks .in{position:relative;background:#fff;padding:14px;border-radius:12px;text-align:center;width:min(320px,92vw);box-shadow:0 18px 54px rgba(0,0,0,.4)}
+
+  /* Bad-review modal */
+  .modal{
+    display:none;position:fixed;inset:0;z-index:40;
+    background:rgba(0,0,0,.6);
+    place-items:center;
+    padding:16px;
+  }
+  .modal .box{
+    width:min(520px,94vw);
+    background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:0 18px 54px rgba(0,0,0,.45);
+    font-family:Arial,Helvetica,sans-serif;
+  }
+  .modal .top{
+    background:#ff6900;color:#fff;font-weight:900;
+    padding:12px 14px;font-size:16px;
+  }
+  .modal .body{padding:12px 14px;color:#111;font-size:14px;line-height:1.4}
+  .modal .body b{font-weight:900}
+  .modal .actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 14px;background:#f6f6f6}
+  .modal .actions button{
+    background:#000;color:#fff;border:0;border-radius:10px;
+    padding:10px 12px;font-weight:900;cursor:pointer;
+  }
 </style>
 
 <!-- minimal hotfix (no visual change to your design) -->
@@ -132,9 +158,12 @@
     <div class="content">
       <div id="qList" class="grid"></div>
 
-      <div class="card">
+      <div class="card" id="optCard">
         <h3 class="q-title" style="margin:0 0 4px">Optional details</h3>
-        <div class="tiny">If you add details, <b>Name</b>, <b>Surname</b> and a valid <b>10-digit Phone</b> are required and you must accept POPIA.</div>
+        <div class="tiny" id="optHint">
+          If you add details, <b>Name</b>, <b>Surname</b> and a valid <b>10-digit Phone</b> are required and you must accept POPIA.
+          <span id="badHint" style="display:none"><br><b>Note:</b> Because you selected a poor/bad rating, contact details are required so the store can follow up.</span>
+        </div>
         <div class="grid2" style="margin-top:6px">
           <div><input id="name" placeholder="Name" autocomplete="off" maxlength="50"></div>
           <div><input id="surname" placeholder="Surname" autocomplete="off" maxlength="50"></div>
@@ -145,10 +174,13 @@
         </div>
         <div style="margin-top:6px">
           <textarea id="feedback" placeholder="Additional feedback (optional)" autocomplete="off" maxlength="3000"></textarea>
+          <div class="tiny">Max 3000 characters.</div>
         </div>
         <label style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;margin-top:6px">
           <input type="checkbox" id="popia" style="margin-top:3px">
-          <small>I consent to processing my personal info for service quality in line with POPIA.</small>
+          <small>
+            I consent to processing my personal info for service quality in line with POPIA and I allow Chicken Licken to contact me regarding this feedback.
+          </small>
         </label>
         <label style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;margin-top:4px">
           <input type="checkbox" id="mk" style="margin-top:3px">
@@ -173,6 +205,20 @@
   </div>
 </div>
 
+<!-- Bad-review modal -->
+<div class="modal" id="badModal" aria-hidden="true">
+  <div class="box">
+    <div class="top">We want to fix this</div>
+    <div class="body">
+      We’re sorry your experience wasn’t great. Please provide your <b>Name</b>, <b>Surname</b> and <b>Phone number</b> so the store can contact you and resolve the issue.<br><br>
+      You will also need to tick the box that allows us to contact you.
+    </div>
+    <div class="actions">
+      <button type="button" id="badOk">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ===== UTIL ===== */
 function normSpaces(s){return (s||'').replace(/\+/g,' ').trim();}
@@ -181,26 +227,15 @@ function getParam(k){const u=new URL(location.href);return normSpaces(u.searchPa
 
 function getDeviceId(){
   const keys=['device','deviceId','deviceid','did','DeviceId','DEVICEID'];
-
-  // 1) Prefer what’s in the URL (?deviceId=... or ?device=...)
   let v = getParamAny(keys);
   if (v){
     try { localStorage.setItem('cl_deviceId', v); } catch(_) {}
     return v;
   }
-
-  // 2) Fall back to whatever was stored before (tablet remembered its ID)
-  try {
-    v = localStorage.getItem('cl_deviceId') || '';
-  } catch(_) {
-    v = '';
-  }
+  try { v = localStorage.getItem('cl_deviceId') || ''; } catch(_) { v=''; }
   if (v) return v;
-
-  // 3) FINAL FALLBACK: no prompt, just "unknown" until QR/device logic overrides it
   return 'UNKNOWN';
 }
- 
 
 function getStoreId(){
   const keys=['store','Store','storeId','StoreId'];
@@ -289,20 +324,83 @@ function detailsAnyFilled(){
   return hasName || hasSur || hasPhone || hasEmail || hasFb;
 }
 function allAnswered(){return QUESTIONS.every(q=>document.querySelector(`.q-row[data-qid="${q.id}"] .opt.active`));}
+
+function hasBadSelected(){
+  for (const q of QUESTIONS){
+    const el = document.querySelector(`.q-row[data-qid="${q.id}"] .opt.active`);
+    if (!el) return false;
+    const score = Number(el.dataset.score || 0);
+    if (score <= 2) return true;
+  }
+  return false;
+}
+
 function markError(id,on){const el=document.getElementById(id);if(el)el.classList.toggle('error',!!on);}
+
+let badPopupShown = false;
+
+function showBadModal(){
+  const m = document.getElementById('badModal');
+  if (!m) return;
+  m.style.display='grid';
+  m.setAttribute('aria-hidden','false');
+}
+function hideBadModal(){
+  const m = document.getElementById('badModal');
+  if (!m) return;
+  m.style.display='none';
+  m.setAttribute('aria-hidden','true');
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const ok = document.getElementById('badOk');
+  if(ok){
+    ok.addEventListener('click', ()=>{
+      hideBadModal();
+      // focus into optional details for quick capture
+      const n = document.getElementById('name');
+      if(n) n.focus();
+    });
+  }
+});
+
 function updateSubmitState(){
   let ok=allAnswered();
   const any=detailsAnyFilled();
-  const requireName=any&&!val('name');
-  const requireSurname=any&&!val('surname');
-  const phoneVal=val('phone');
-  const requirePhone=any&&!/^\d{10}$/.test(phoneVal);
-  const requirePOPIA=any&&!document.getElementById('popia').checked;
+  const bad = ok && hasBadSelected(); // only evaluate after answered
+
+  // show hint when bad
+  const badHint = document.getElementById('badHint');
+  if (badHint) badHint.style.display = bad ? 'inline' : 'none';
+
+  // If bad review => require details + POPIA
+  const mustProvide = bad ? true : any;
+
+  const requireName    = mustProvide && !val('name');
+  const requireSurname = mustProvide && !val('surname');
+
+  const phoneVal = val('phone');
+  const requirePhone = mustProvide && !/^\d{10}$/.test(phoneVal);
+
+  const requirePOPIA = mustProvide && !document.getElementById('popia').checked;
+
   const em=val('email');
-  const badEmail=em&&!/.+@.+\..+/.test(em);
-  markError('name',requireName);markError('surname',requireSurname);markError('phone',requirePhone);
-  if(requireName||requireSurname||requirePhone||requirePOPIA||badEmail)ok=false;
+  const badEmail=em && !/.+@.+\..+/.test(em);
+
+  markError('name',requireName);
+  markError('surname',requireSurname);
+  markError('phone',requirePhone);
+
+  if(requireName||requireSurname||requirePhone||requirePOPIA||badEmail) ok=false;
+
   const btn=document.getElementById('submitBtn'); if(btn) btn.disabled=!ok;
+
+  // popup after all answered if bad present
+  if (allAnswered() && hasBadSelected() && !badPopupShown){
+    badPopupShown = true;
+    showBadModal();
+  }
+
   return ok;
 }
 document.addEventListener('input',updateSubmitState);
@@ -379,13 +477,19 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }
 
     if(!allAnswered()){toast('Please answer all questions');return;}
-    const any=detailsAnyFilled();
-    if(any){
+
+    const bad = hasBadSelected();
+    const any = detailsAnyFilled();
+    const mustProvide = bad ? true : any;
+
+    // If bad => force details
+    if(mustProvide){
       if(!val('name')){toast('Please enter your Name');return;}
       if(!val('surname')){toast('Please enter your Surname');return;}
       const ph=val('phone');if(!/^\d{10}$/.test(ph)){toast('Enter a valid 10-digit Phone');return;}
-      if(!document.getElementById('popia').checked){toast('Tick POPIA consent');return;}
+      if(!document.getElementById('popia').checked){toast('Please tick consent so we may contact you');return;}
     }
+
     const em=val('email');if(em&&!/.+@.+\..+/.test(em)){toast('Enter a valid Email');return;}
     if(dupLocalBlockIfAny()){ toast('You have already submitted in the last 24 hours.'); return; }
 
@@ -413,7 +517,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     inFlight = true;
     submit.disabled = true;
+
+    // keep UI instant
     fireAndForgetSend(JSON.stringify(payload));
+
     dupLocalMark();
     if (typeof window.CL_QR_markSubmitted === 'function') window.CL_QR_markSubmitted();
     showThanks();
@@ -437,6 +544,8 @@ function resetForm(){
   document.getElementById('popia').checked=false;
   document.getElementById('mk').checked=false;
   inFlight = false;
+  badPopupShown = false;
+  hideBadModal();
   updateSubmitState();
 }
 function toast(msg){const s=document.getElementById('statusTxt');if(!s)return;s.textContent=msg;clearTimeout(s._t);s._t=setTimeout(()=>s.textContent='',1600);}
